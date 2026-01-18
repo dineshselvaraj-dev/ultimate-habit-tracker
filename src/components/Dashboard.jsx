@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addWeeks, subWeeks, isFuture, isToday, parseISO } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar, Save, Download, Quote } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Save, Download, Quote, Star } from 'lucide-react';
 import WeeklyGrid from './WeeklyGrid';
 import TimelineView from './TimelineView';
 import ProgressCircle from './ProgressCircle';
@@ -12,7 +12,10 @@ import Toast from './Toast';
 import ExportModal from './ExportModal';
 import RoutineModal from './RoutineModal';
 import ConfirmModal from './ConfirmModal';
+import ReminderPopup from './ReminderPopup';
+import MilestoneModal from './MilestoneModal';
 import { getTodayIST, getTodayISTString, isTodayIST, isFutureIST } from '../utils/dateUtils';
+import { getRandomQuote } from '../data/quotes';
 
 import { themes } from '../styles/themes';
 import { Palette } from 'lucide-react';
@@ -130,7 +133,14 @@ const Dashboard = () => {
     // 1. Get current date string
     const dateStr = format(currentDate, 'yyyy-MM-dd');
 
-    // 2. Iterate and add each task with current date
+    // 2. Clear existing tasks for this date to prevent duplicates
+    // CRITICAL: Protect 'milestone' tasks from deletion
+    const existingDayTasks = tasks.filter(t => t.date === dateStr && t.type !== 'milestone');
+    for (const t of existingDayTasks) {
+      await dbRequest.deleteTask(t.id);
+    }
+
+    // 3. Iterate and add each task with current date
     let addedCount = 0;
     for (const t of routineTasks) {
       // Strip ID, use current date, reset completion
@@ -139,7 +149,12 @@ const Dashboard = () => {
         startTime: t.startTime || '',
         endTime: t.endTime || '',
         date: dateStr,
-        completed: false // Always start pending
+        completed: false, // Always start pending
+        completed: false, // Always start pending
+        category: t.category, // Persist category for theming
+        priority: t.priority, // Persist priority for badges
+        // Dynamic Quote Injection
+        motivation: getRandomQuote(t.category || 'general')
       };
       await dbRequest.addTask(newTask);
       addedCount++;
@@ -160,6 +175,48 @@ const Dashboard = () => {
 
   // Helper: Strictly Get "Today" in IST
   // const getTodayIST = ... Removed, imported from utils
+
+  // --- REMINDER LOGIC ---
+  const [activeReminder, setActiveReminder] = useState(null);
+  const [lastRemindedTime, setLastRemindedTime] = useState(null);
+
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      // Format as HH:mm
+      const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+      // Prevent double trigger in same minute
+      if (lastRemindedTime === timeStr) return;
+
+      const todayStr = format(now, 'yyyy-MM-dd');
+
+      // Find a task starting NOW that is not completed
+      const startingTask = tasks.find(t =>
+        t.date === todayStr &&
+        t.startTime === timeStr &&
+        !t.completed
+      );
+
+      if (startingTask) {
+        setActiveReminder(startingTask);
+        setLastRemindedTime(timeStr);
+        // Play subtle sound? (Optional, skipping for now to keep it visual as requested)
+      }
+    };
+
+    const timer = setInterval(checkReminders, 5000); // Check every 5s to catch the minute change quickly
+    return () => clearInterval(timer);
+  }, [tasks, lastRemindedTime]);
+
+  const handleCloseReminder = () => {
+    setActiveReminder(null);
+  };
+  // ----------------------
+
+  // Motivational Quotes - Billionaire Edition (Daily Rotation)
 
   // Motivational Quotes - Billionaire Edition (Daily Rotation)
   const quotes = [
@@ -493,8 +550,32 @@ const Dashboard = () => {
     link.click();
   };
 
+  // Milestone Modal State
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+
+  const handleSaveMilestone = async (milestoneData) => {
+    await dbRequest.addTask({
+      ...milestoneData,
+      completed: false
+    });
+    setRefreshKey(k => k + 1);
+    showToast(`Milestone "${milestoneData.title}" saved!`, "success");
+  };
+
   return (
     <div className="container dashboard-container">
+      <ReminderPopup
+        isOpen={!!activeReminder}
+        task={activeReminder}
+        onClose={handleCloseReminder}
+      />
+
+      <MilestoneModal
+        isOpen={showMilestoneModal}
+        onClose={() => setShowMilestoneModal(false)}
+        onSave={handleSaveMilestone}
+      />
+
       {/* Quote Banner */}
       {/* Animated Quote Banner */}
       <motion.div
@@ -645,8 +726,10 @@ const Dashboard = () => {
             Weekly Grid
           </button>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <div style={{ position: 'relative' }}>
+
+
             <button
               className="export-btn"
               onClick={() => setShowThemeMenu(!showThemeMenu)}

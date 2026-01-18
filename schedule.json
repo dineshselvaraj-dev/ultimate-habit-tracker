@@ -1,0 +1,154 @@
+[
+    {
+        "title": "Morning Walking 🏃‍♂️",
+        "startTime": "03:50",
+        "endTime": "05:20",
+        "priority": "high",
+        "category": "fitness",
+        "completed": false
+    },
+    {
+        "title": "Plan Daily Tasks (Notebook) 📓",
+        "startTime": "05:20",
+        "endTime": "06:15",
+        "priority": "high",
+        "category": "planning",
+        "completed": false
+    },
+    {
+        "title": "Household Works 🧹",
+        "startTime": "06:15",
+        "endTime": "07:00",
+        "priority": "normal",
+        "category": "household",
+        "completed": false
+    },
+    {
+        "title": "Plan Content: PuppyDreamz 🐶",
+        "startTime": "07:00",
+        "endTime": "07:30",
+        "priority": "high",
+        "category": "content",
+        "completed": false
+    },
+    {
+        "title": "Plan Content: TomInvestz 💰",
+        "startTime": "07:30",
+        "endTime": "08:00",
+        "priority": "high",
+        "category": "finance",
+        "completed": false
+    },
+    {
+        "title": "Oracle Fusion SCM Class (TechLeadsIT) 🎓",
+        "startTime": "08:00",
+        "endTime": "09:00",
+        "priority": "high",
+        "category": "learning",
+        "completed": false
+    },
+    {
+        "title": "Breakfast 🍳",
+        "startTime": "09:00",
+        "endTime": "09:15",
+        "priority": "normal",
+        "category": "rest",
+        "completed": false
+    },
+    {
+        "title": "Oracle Fusion SCM Practice 💻",
+        "startTime": "09:20",
+        "endTime": "12:30",
+        "priority": "high",
+        "category": "practice",
+        "completed": false
+    },
+    {
+        "title": "Lunch 🥗",
+        "startTime": "12:30",
+        "endTime": "12:45",
+        "priority": "normal",
+        "category": "rest",
+        "completed": false
+    },
+    {
+        "title": "Rest / Power Nap 🔋",
+        "startTime": "12:45",
+        "endTime": "13:00",
+        "priority": "normal",
+        "category": "rest",
+        "completed": false
+    },
+    {
+        "title": "Oracle Fusion SCM Practice 💻",
+        "startTime": "13:00",
+        "endTime": "17:20",
+        "priority": "high",
+        "category": "practice",
+        "completed": false
+    },
+    {
+        "title": "Bathing & Cleaning 🚿",
+        "startTime": "17:20",
+        "endTime": "17:45",
+        "priority": "normal",
+        "category": "household",
+        "completed": false
+    },
+    {
+        "title": "Upload YT Videos (Both Channels) 📹",
+        "startTime": "17:50",
+        "endTime": "18:00",
+        "priority": "high",
+        "category": "content",
+        "completed": false
+    },
+    {
+        "title": "Oracle Fusion SCM Practice 💻",
+        "startTime": "18:00",
+        "endTime": "19:00",
+        "priority": "high",
+        "category": "practice",
+        "completed": false
+    },
+    {
+        "title": "Relax/Buffer Time (Optimization) 🧘",
+        "startTime": "19:00",
+        "endTime": "20:00",
+        "priority": "normal",
+        "category": "rest",
+        "completed": false
+    },
+    {
+        "title": "Dinner 🍽️",
+        "startTime": "20:00",
+        "endTime": "20:30",
+        "priority": "normal",
+        "category": "rest",
+        "completed": false
+    },
+    {
+        "title": "Make Video: PuppyDreamz 🎬",
+        "startTime": "20:30",
+        "endTime": "22:00",
+        "priority": "high",
+        "category": "content",
+        "completed": false
+    },
+    {
+        "title": "Make Video: TomInvestz 🎬",
+        "startTime": "22:00",
+        "endTime": "23:20",
+        "priority": "high",
+        "category": "content",
+        "completed": false
+    },
+    {
+        "title": "Wind Down & Sleep 😴",
+        "startTime": "23:30",
+        "endTime": "23:59",
+        "priority": "normal",
+        "category": "rest",
+        "completed": false
+    }
+]

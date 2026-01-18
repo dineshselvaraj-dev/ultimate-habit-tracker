@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, isFuture, isToday, isPast, parseISO, differenceInMinutes, parse } from 'date-fns';
-import { Clock, Check, Trash2, Edit2, AlertCircle } from 'lucide-react';
+import { format, isFuture, isToday, isPast, parseISO, differenceInMinutes, parse, isWithinInterval } from 'date-fns';
+import { Clock, Check, Trash2, Edit2, AlertCircle, Flame, Star } from 'lucide-react';
 
 const TimelineView = ({ tasks, onToggle, onDelete, onUpdate, onEdit, onAlert }) => {
   const sortedTasks = [...tasks].sort((a, b) => {
@@ -38,6 +38,29 @@ const TimelineView = ({ tasks, onToggle, onDelete, onUpdate, onEdit, onAlert }) 
     return `${hours > 0 ? hours + 'h ' : ''}${mins}m`;
   };
 
+  const getCategoryGradient = (category) => {
+    switch (category?.toLowerCase()) {
+      case 'fitness': return 'linear-gradient(90deg, #f97316, #ef4444)'; // Orange -> Red
+      case 'planning': return 'linear-gradient(90deg, #6366f1, #a855f7)'; // Indigo -> Purple
+      case 'household': return 'linear-gradient(90deg, #14b8a6, #22c55e)'; // Teal -> Green
+      case 'content': return 'linear-gradient(90deg, #ec4899, #d946ef)'; // Pink -> Fuchsia
+      case 'finance': return 'linear-gradient(90deg, #eab308, #22c55e)'; // Yellow -> Green
+      case 'learning': return 'linear-gradient(90deg, #06b6d4, #3b82f6)'; // Cyan -> Blue
+      case 'practice': return 'linear-gradient(90deg, #8b5cf6, #3b82f6)'; // Violet -> Blue
+      case 'rest': return 'linear-gradient(90deg, #94a3b8, #cbd5e1)'; // Slate (Subtle)
+      default: return 'linear-gradient(90deg, #3b82f6, #8b5cf6)'; // Default Blue-Purple
+    }
+  };
+
+  const isTaskActive = (task) => {
+    if (!task.startTime || !task.endTime || !isToday(parseISO(task.date))) return false;
+    const now = new Date();
+    const today = format(now, 'yyyy-MM-dd');
+    const start = parse(`${today} ${task.startTime}`, 'yyyy-MM-dd HH:mm', new Date());
+    const end = parse(`${today} ${task.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+    return isWithinInterval(now, { start, end });
+  };
+
   return (
     <div className="timeline-container">
       {sortedTasks.length === 0 ? (
@@ -51,18 +74,25 @@ const TimelineView = ({ tasks, onToggle, onDelete, onUpdate, onEdit, onAlert }) 
               const taskDate = parseISO(task.date);
               const isFutureTask = isFuture(taskDate) && !isToday(taskDate);
               const duration = getDuration(task.startTime, task.endTime);
+              const isActive = isTaskActive(task);
+              const isPriority = task.priority === 'high';
+              const isMilestone = task.type === 'milestone';
 
               return (
                 <motion.div
                   key={task.id}
                   initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  animate={{
+                    opacity: 1,
+                    x: 0,
+                    scale: isActive ? 1.02 : 1
+                  }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`timeline-item ${task.completed ? 'completed' : ''}`}
+                  className={`timeline-item ${task.completed ? 'completed' : ''} ${isActive ? 'active-pulse' : ''} ${isMilestone ? 'milestone-item' : ''}`}
                 >
                   <div className="time-column">
-                    <div className="time-badge">
+                    <div className={`time-badge ${isActive ? 'active-time' : ''}`}>
                       {task.startTime ? (
                         <>
                           <span className="start-time">{task.startTime}</span>
@@ -72,15 +102,32 @@ const TimelineView = ({ tasks, onToggle, onDelete, onUpdate, onEdit, onAlert }) 
                         <span className="anytime">Anytime</span>
                       )}
                     </div>
-                    <div className="timeline-line" />
+                    <div className={`timeline-line ${isActive ? 'active-line' : ''}`} />
                   </div>
 
-                  <div className="task-card">
+                  <div className={`task-card ${isPriority ? 'priority-card' : ''} ${isMilestone ? 'milestone-card' : ''}`}>
                     <div className="task-content">
                       <div className="task-header">
+                        {isMilestone && <Star size={18} className="milestone-icon" fill="currentColor" />}
+                        {isPriority && !isMilestone && <Flame size={18} className="priority-icon" fill="var(--danger)" />}
                         <span className="task-title">{task.title}</span>
                         {duration && <span className="duration-tag">{duration}</span>}
+                        {isActive && <span className="now-badge">NOW</span>}
                       </div>
+                      {task.motivation && (
+                        <div className="task-motivation" style={{
+                          fontSize: '0.9rem',
+                          marginTop: '6px',
+                          fontWeight: 600,
+                          background: getCategoryGradient(task.category),
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          fontStyle: 'italic',
+                          filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.1))' // Subtle pop for light mode
+                        }}>
+                          "{task.motivation}"
+                        </div>
+                      )}
                       {task.endTime && (
                         <div className="task-meta">
                           Completed by {task.endTime}
@@ -206,6 +253,67 @@ const TimelineView = ({ tasks, onToggle, onDelete, onUpdate, onEdit, onAlert }) 
         .empty-circle { width: 100%; height: 100%; border-radius: 50%; }
         
         .empty-timeline { text-align: center; color: var(--text-muted); padding: 40px; border: 2px dashed var(--border-color); border-radius: var(--radius-md); }
+        
+        /* Active Pulse Animation */
+        .active-pulse .task-card {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(var(--accent-primary-rgb), 0.3);
+            animation: pulse-border 2s infinite;
+        }
+        
+        .active-time {
+            background: var(--accent-primary) !important;
+            color: white !important;
+            border-color: var(--accent-primary) !important;
+        }
+        .active-time .start-time, .active-time .end-time { color: white !important; }
+        
+        .active-line { background: var(--accent-primary); }
+
+        .now-badge {
+            background: var(--danger); color: white;
+            font-size: 0.65rem; padding: 2px 6px; border-radius: 4px;
+            font-weight: 800; animation: bounce 1s infinite alternate;
+        }
+
+        /* Priority Styling */
+        .priority-card {
+            border-left: 3px solid var(--danger);
+            background: linear-gradient(to right, rgba(239, 68, 68, 0.02), transparent);
+        }
+        .priority-icon { color: var(--danger); margin-right: -4px; animation: flame-flicker 1.5s infinite alternate; }
+
+        /* Milestone Styling (Gold) */
+        .milestone-card {
+            border-left: 3px solid #f59e0b;
+            background: linear-gradient(to right, rgba(251, 191, 36, 0.1), transparent);
+            border-top: 1px solid rgba(251, 191, 36, 0.3);
+            border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+        }
+        .milestone-icon { 
+            color: #d97706; 
+            margin-right: -4px;
+            filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.6));
+            animation: spin-slow 10s linear infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb), 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(var(--accent-primary-rgb), 0); }
+            100% { box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb), 0); }
+        }
+
+        @keyframes flame-flicker {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 2px var(--danger)); }
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-2px); } }
       `}</style>
     </div>
   );
